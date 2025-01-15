@@ -226,6 +226,8 @@ class ZLThumbnailViewController: UIViewController {
     lazy var topView: UIView = {
         let view = UIView()
         view.backgroundColor = .zl.topViewBgColor
+        view.clipsToBounds = true
+        view.layer.cornerRadius = 6
         return view
     }()
     
@@ -356,7 +358,7 @@ class ZLThumbnailViewController: UIViewController {
         var collectionViewY = deviceIsFringeScreen() ? 0 : insets.top
         
         if showTips {
-            topView.frame = CGRect(x: insets.left + 24, y: insets.top + collectionViewY + collectionViewInsetTop + 17, width: totalWidth - 48, height: 58)
+            topView.frame = CGRect(x: insets.left + 24, y: insets.top + collectionViewY + collectionViewInsetTop + 15, width: totalWidth - 48, height: 58)
             topTipImage.frame = CGRect(x: 7, y: 17, width: 24, height: 24)
             topTipLabel.frame = CGRect(x: 39, y: 10, width: totalWidth - 128, height: 38)
             topTipLabel.text = ZLPhotoUIConfiguration.default().topTips
