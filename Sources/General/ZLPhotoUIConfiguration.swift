@@ -142,6 +142,8 @@ public class ZLPhotoUIConfiguration: NSObject {
     /// Timeout for image parsing. Defaults to 20.
     public var timeout: TimeInterval = 20
     
+    public var topTips: String = ""
+
     // MARK: Navigation and bottom tool bar
     
     /// The blur effect of the navigation bar in the album list
@@ -312,6 +314,9 @@ public class ZLPhotoUIConfiguration: NSObject {
     /// 相册小图界面底部工具条背景色
     public var bottomToolViewBgColor: UIColor = .zl.rgba(35, 35, 35, 0.3)
     
+    public var topViewBgColor: UIColor = .zl.rgba(44, 44, 44, 1.0)
+    public var topTipTextColor: UIColor = .zl.rgba(159, 159, 159, 1.0)
+
     /// A color for background in bottom tool view in preview interface.
     /// 预览大图界面底部工具条背景色
     public var bottomToolViewBgColorOfPreviewVC: UIColor = .zl.rgba(35, 35, 35, 0.3)

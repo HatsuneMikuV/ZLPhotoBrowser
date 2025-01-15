@@ -110,6 +110,14 @@ extension ZLPhotoBrowserWrapper where Base: UIColor {
         ZLPhotoUIConfiguration.default().bottomToolViewBgColor
     }
     
+    static var topViewBgColor: UIColor {
+        ZLPhotoUIConfiguration.default().topViewBgColor
+    }
+    
+    static var topLabelTextColor: UIColor {
+        ZLPhotoUIConfiguration.default().topTipTextColor
+    }
+    
     /// 预览大图界面底部工具条底色
     static var bottomToolViewBgColorOfPreviewVC: UIColor {
         ZLPhotoUIConfiguration.default().bottomToolViewBgColorOfPreviewVC

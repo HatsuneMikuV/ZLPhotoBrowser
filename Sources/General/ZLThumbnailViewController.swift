@@ -99,6 +99,31 @@ class ZLThumbnailViewController: UIViewController {
         return label
     }()
     
+    private lazy var topTipImage: UIImageView = {
+        let view = UIImageView(image: .zl.getImage("zl_top_tips"))
+        view.contentMode = .scaleAspectFit
+        view.clipsToBounds = true
+        return view
+    }()
+    
+    private lazy var topTipLabel: UILabel = {
+        let label = UILabel()
+        label.font = .zl.font(ofSize: 14)
+        label.textColor = .zl.topLabelTextColor
+        label.textAlignment = .left
+        label.minimumScaleFactor = 0.5
+        label.adjustsFontSizeToFitWidth = true
+        label.numberOfLines = 2
+        return label
+    }()
+    
+    private lazy var topTipCloseBtn: UIButton = {
+        let btn = UIButton(type: .custom)
+        btn.setImage(.zl.getImage("zl_navClose"), for: .normal)
+        btn.addTarget(self, action: #selector(tipCloseBtnClick), for: .touchUpInside)
+        return btn
+    }()
+    
     private lazy var doneBtn: UIButton = {
         let btn = createBtn(localLanguageTextValue(.done), #selector(doneBtnClick), true)
         btn.layer.masksToBounds = true
@@ -143,6 +168,8 @@ class ZLThumbnailViewController: UIViewController {
     /// 拍照后置为true，需要刷新相册列表
     private var hasTakeANewAsset = false
     
+    private var showTips = false
+
     private var slideCalculateQueue = DispatchQueue(label: "com.ZLhotoBrowser.slide")
     
     private var autoScrollTimer: CADisplayLink?
@@ -196,6 +223,13 @@ class ZLThumbnailViewController: UIViewController {
         return view
     }()
     
+    lazy var topView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .zl.topViewBgColor
+        return view
+    }()
+    
+    
     var arrDataSources: [ZLPhotoModel] = []
     
     var showCameraCell: Bool {
@@ -241,6 +275,8 @@ class ZLThumbnailViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        showTips = !ZLPhotoUIConfiguration.default().topTips.isEmpty
 
         setupUI()
         
@@ -317,7 +353,21 @@ class ZLThumbnailViewController: UIViewController {
         
         let totalWidth = view.zl.width - insets.left - insets.right
         // 非刘海屏，在下拉返回动画时候，状态栏的隐藏和显示之间的切换会导致Collectionview的抖动，这里给个Y值，避开状态栏
-        let collectionViewY = deviceIsFringeScreen() ? 0 : insets.top
+        var collectionViewY = deviceIsFringeScreen() ? 0 : insets.top
+        
+        if showTips {
+            topView.frame = CGRect(x: insets.left + 24, y: insets.top + collectionViewY + collectionViewInsetTop + 17, width: totalWidth - 48, height: 58)
+            topTipImage.frame = CGRect(x: 7, y: 17, width: 24, height: 24)
+            topTipLabel.frame = CGRect(x: 39, y: 10, width: totalWidth - 128, height: 38)
+            topTipLabel.text = ZLPhotoUIConfiguration.default().topTips
+            topTipCloseBtn.frame = CGRect(x: totalWidth - 89, y: 12, width: 34, height: 34)
+            topTipCloseBtn.imageView?.frame = topTipCloseBtn.bounds
+            
+            collectionViewY = insets.top + collectionViewY + collectionViewInsetTop + 86
+            collectionViewInsetTop = 0
+        }
+        
+        
         collectionView.frame = CGRect(
             x: insets.left,
             y: collectionViewY,
@@ -412,6 +462,13 @@ class ZLThumbnailViewController: UIViewController {
         if showLimitAuthTipsView {
             limitAuthTipsView = ZLLimitedAuthorityTipsView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: ZLLimitedAuthorityTipsView.height))
             bottomView.addSubview(limitAuthTipsView!)
+        }
+        
+        if showTips {
+            view.addSubview(topView)
+            topView.addSubview(topTipImage)
+            topView.addSubview(topTipLabel)
+            topView.addSubview(topTipCloseBtn)
         }
         
         bottomView.addSubview(previewBtn)
@@ -608,6 +665,19 @@ class ZLThumbnailViewController: UIViewController {
             nav?.selectImageBlock?()
         }
     }
+    
+    @objc private func tipCloseBtnClick() {
+        topView.removeFromSuperview()
+        showTips = false
+        lastVisibleIndexPathBeforeRotation = nil
+        if collectionView.indexPathsForVisibleItems.count > 0, let indexpath = collectionView.indexPathsForVisibleItems.first {
+            collectionView.scrollToItem(at: indexpath, at: UICollectionView.ScrollPosition.top, animated: false)
+        } else {
+            collectionView.setContentOffset(.zero, animated: false)
+        }
+        viewDidLayoutSubviews()
+    }
+    
     
     @objc private func scrollToBottomBtnClick() {
         if ZLPhotoUIConfiguration.default().sortAscending {

@@ -36,6 +36,12 @@ public extension ZLPhotoUIConfiguration {
     }
     
     @discardableResult
+    func topTips(_ tips: String) -> ZLPhotoUIConfiguration {
+        topTips = tips
+        return self
+    }
+    
+    @discardableResult
     func style(_ style: ZLPhotoBrowserStyle) -> ZLPhotoUIConfiguration {
         self.style = style
         return self
