@@ -2,13 +2,26 @@
 
 -----
 
+## [4.5.8](https://github.com/longitachi/ZLPhotoBrowser/releases/tag/4.5.8) (2025-02-18)
+### Add:
+* Add video stabilization mode to camera configuration. [#959](https://github.com/longitachi/ZLPhotoBrowser/pull/959) @tsinis
+
+### Fix:
+* Fix video recording with both torch-on and wide cameras. [#960](https://github.com/longitachi/ZLPhotoBrowser/pull/960) @tsinis
+* Fixed the problem of freezing caused by calculating the frame when previewing network videos. [#967](https://github.com/longitachi/ZLPhotoBrowser/issues/967)
+* Fix the memory leak issue in the ZLEditImageViewController interface. [#968](https://github.com/longitachi/ZLPhotoBrowser/issues/968)
+* When there is no album permission, clicking on the album no longer displays the permission alert. [#969](https://github.com/longitachi/ZLPhotoBrowser/issues/969)
+* Correct eraser misalignment after image cropping. [#971](https://github.com/longitachi/ZLPhotoBrowser/pull/971) @vcicis
+
+---
+
 ## [4.5.7](https://github.com/longitachi/ZLPhotoBrowser/releases/tag/4.5.7) (2024-12-02)
 ### Add:
 * Custom camera supports tap-to-record mode. [#944](https://github.com/longitachi/ZLPhotoBrowser/pull/944) @tsinis
 * Custom camera supports wide-angle lenses on iOS 13 and above. [#948](https://github.com/longitachi/ZLPhotoBrowser/pull/948) @tsinis
 * Custom camera allows adding a custom overlay view. [#951](https://github.com/longitachi/ZLPhotoBrowser/pull/951) @tsinis
 * Video editing controller adds a callback block for canceling edits. [#953](https://github.com/longitachi/ZLPhotoBrowser/pull/953) @tsinis
-* Added `ZLImagePreviewControllerDelegate` protocol to receive event callbacks in ZLImagePreviewController.
+* Added `ZLImagePreviewControllerDelegate` protocol to receive event callbacks in `ZLImagePreviewController`.
 
 ---
 

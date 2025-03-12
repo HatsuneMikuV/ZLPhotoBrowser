@@ -244,8 +244,8 @@ class ZLThumbnailViewController: UIViewController {
     @available(iOS 14, *)
     var showAddPhotoCell: Bool {
         PHPhotoLibrary.zl.authStatus(for: .readWrite) == .limited
-        && ZLPhotoUIConfiguration.default().showAddPhotoButton
-        && albumList.isCameraRoll
+            && ZLPhotoUIConfiguration.default().showAddPhotoButton
+            && albumList.isCameraRoll
     }
     
     private var hiddenStatusBar = false {
@@ -993,8 +993,8 @@ class ZLThumbnailViewController: UIViewController {
         let config = ZLPhotoConfiguration.default()
         if config.useCustomCamera {
             let camera = ZLCustomCamera()
-            camera.takeDoneBlock = { [weak self] image, videoUrl in
-                self?.save(image: image, videoUrl: videoUrl)
+            camera.takeDoneBlock = { [weak self] image, videoURL in
+                self?.save(image: image, videoURL: videoURL)
             }
             showDetailViewController(camera, sender: nil)
         } else {
@@ -1028,7 +1028,7 @@ class ZLThumbnailViewController: UIViewController {
         }
     }
     
-    private func save(image: UIImage?, videoUrl: URL?) {
+    private func save(image: UIImage?, videoURL: URL?) {
         if let image {
             let hud = ZLProgressHUD.show(toast: .processing)
             ZLPhotoManager.saveImageToAlbum(image: image) { [weak self] error, asset in
@@ -1040,9 +1040,9 @@ class ZLThumbnailViewController: UIViewController {
                 }
                 hud.hide()
             }
-        } else if let videoUrl {
+        } else if let videoURL {
             let hud = ZLProgressHUD.show(toast: .processing)
-            ZLPhotoManager.saveVideoToAlbum(url: videoUrl) { [weak self] error, asset in
+            ZLPhotoManager.saveVideoToAlbum(url: videoURL) { [weak self] error, asset in
                 if error == nil, let asset {
                     let model = ZLPhotoModel(asset: asset)
                     self?.handleDataArray(newModel: model)
@@ -1578,7 +1578,7 @@ extension ZLThumbnailViewController: UIImagePickerControllerDelegate, UINavigati
         picker.dismiss(animated: true) {
             let image = info[.originalImage] as? UIImage
             let url = info[.mediaURL] as? URL
-            self.save(image: image, videoUrl: url)
+            self.save(image: image, videoURL: url)
         }
     }
 }
@@ -1673,6 +1673,8 @@ class ZLEmbedAlbumListNavView: UIView {
         return btn
     }()
     
+    private var isFirstLayout = true
+    
     var title: String {
         didSet {
             albumTitleLabel.text = title
@@ -1729,20 +1731,29 @@ class ZLEmbedAlbumListNavView: UIView {
         )
         let titleBgControlW = albumTitleW + ZLEmbedAlbumListNavView.arrowH + 20
         
-        UIView.animate(withDuration: 0.25) {
-            self.titleBgControl.frame = CGRect(
-                x: (self.frame.width - titleBgControlW) / 2,
+        func setFrame() {
+            titleBgControl.frame = CGRect(
+                x: (frame.width - titleBgControlW) / 2,
                 y: insets.top + (44 - ZLEmbedAlbumListNavView.titleViewH) / 2,
                 width: titleBgControlW,
                 height: ZLEmbedAlbumListNavView.titleViewH
             )
-            self.albumTitleLabel.frame = CGRect(x: 10, y: 0, width: albumTitleW, height: ZLEmbedAlbumListNavView.titleViewH)
-            self.arrow.frame = CGRect(
-                x: self.albumTitleLabel.frame.maxX + 5,
+            albumTitleLabel.frame = CGRect(x: 10, y: 0, width: albumTitleW, height: ZLEmbedAlbumListNavView.titleViewH)
+            arrow.frame = CGRect(
+                x: albumTitleLabel.frame.maxX + 5,
                 y: (ZLEmbedAlbumListNavView.titleViewH - ZLEmbedAlbumListNavView.arrowH) / 2.0,
                 width: ZLEmbedAlbumListNavView.arrowH,
                 height: ZLEmbedAlbumListNavView.arrowH
             )
+        }
+        
+        if isFirstLayout {
+            isFirstLayout = false
+            setFrame()
+        } else {
+            UIView.animate(withDuration: 0.25) {
+                setFrame()
+            }
         }
     }
     
