@@ -48,6 +48,9 @@ class ZLPhotoPreviewController: UIViewController {
         view.delegate = self
         view.isPagingEnabled = true
         view.showsHorizontalScrollIndicator = false
+        if #available(iOS 11.0, *) {
+            view.contentInsetAdjustmentBehavior = .never
+        }
         
         ZLPhotoPreviewCell.zl.register(view)
         ZLGifPreviewCell.zl.register(view)
@@ -345,7 +348,9 @@ class ZLPhotoPreviewController: UIViewController {
     
     private func setupUI() {
         view.backgroundColor = .zl.previewVCBgColor
-        automaticallyAdjustsScrollViewInsets = false
+        if #unavailable(iOS 11.0) {
+            automaticallyAdjustsScrollViewInsets = false
+        }
         
         let config = ZLPhotoConfiguration.default()
         let uiConfig = ZLPhotoUIConfiguration.default()
@@ -888,10 +893,6 @@ extension ZLPhotoPreviewController: UICollectionViewDataSource, UICollectionView
         if config.allowSelectGif, model.type == .gif {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ZLGifPreviewCell.zl.identifier, for: indexPath) as! ZLGifPreviewCell
             
-            cell.singleTapBlock = { [weak self] in
-                self?.tapPreviewCell()
-            }
-            
             cell.model = model
             
             baseCell = cell
@@ -909,10 +910,6 @@ extension ZLPhotoPreviewController: UICollectionViewDataSource, UICollectionView
             baseCell = cell
         } else {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ZLPhotoPreviewCell.zl.identifier, for: indexPath) as! ZLPhotoPreviewCell
-
-            cell.singleTapBlock = { [weak self] in
-                self?.tapPreviewCell()
-            }
 
             cell.model = model
 

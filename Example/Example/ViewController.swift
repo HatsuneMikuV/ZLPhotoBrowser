@@ -208,25 +208,39 @@ class ViewController: UIViewController {
                     debugPrint("No microphone authority")
                 }
             }
-            .gifPlayBlock { imageView, data, _ in
-                let animatedImage = FLAnimatedImage(gifData: data)
-                
-                var animatedImageView: FLAnimatedImageView?
-                for subView in imageView.subviews {
-                    if let subView = subView as? FLAnimatedImageView {
-                        animatedImageView = subView
-                        break
+            .gifPlayBlock { imageView, data, asset, _ in
+                let provider = RawImageDataProvider(data: data, cacheKey: asset.localIdentifier)
+                imageView.kf.setImage(
+                    with: .provider(provider),
+                    placeholder: imageView.image,
+                    options: [.cacheOriginalImage]
+                ) { result in
+                    switch result {
+                    case .success(let value):
+                        print("✅ GIF 加载并播放成功")
+                    case .failure(let error):
+                        print("❌ GIF 加载失败")
                     }
                 }
                 
-                if animatedImageView == nil {
-                    animatedImageView = FLAnimatedImageView()
-                    imageView.addSubview(animatedImageView!)
-                }
-                
-                animatedImageView?.frame = imageView.bounds
-                animatedImageView?.animatedImage = animatedImage
-                animatedImageView?.runLoopMode = .default
+//                let animatedImage = FLAnimatedImage(gifData: data)
+//                
+//                var animatedImageView: FLAnimatedImageView?
+//                for subView in imageView.subviews {
+//                    if let subView = subView as? FLAnimatedImageView {
+//                        animatedImageView = subView
+//                        break
+//                    }
+//                }
+//                
+//                if animatedImageView == nil {
+//                    animatedImageView = FLAnimatedImageView()
+//                    imageView.addSubview(animatedImageView!)
+//                }
+//                
+//                animatedImageView?.frame = imageView.bounds
+//                animatedImageView?.animatedImage = animatedImage
+//                animatedImageView?.runLoopMode = .default
             }
             .pauseGIFBlock { $0.subviews.forEach { ($0 as? FLAnimatedImageView)?.stopAnimating() } }
             .resumeGIFBlock { $0.subviews.forEach { ($0 as? FLAnimatedImageView)?.startAnimating() } }
@@ -236,11 +250,9 @@ class ViewController: UIViewController {
 //            }
         
         /// Using this init method, you can continue editing the selected photo
-        let ac = ZLPhotoPreviewSheet(results: takeSelectedAssetsSwitch.isOn ? selectedResults : nil)
+        let picker = ZLPhotoPicker(results: takeSelectedAssetsSwitch.isOn ? selectedResults : nil)
         
-//        let ac = ZLPhotoPreviewSheet(selectedAssets: takeSelectedAssetsSwitch.isOn ? selectedAssets : nil)
-        
-        ac.selectImageBlock = { [weak self] results, isOriginal in
+        picker.selectImageBlock = { [weak self] results, isOriginal in
             guard let `self` = self else { return }
             self.selectedResults = results
             self.selectedImages = results.map { $0.image }
@@ -255,17 +267,17 @@ class ViewController: UIViewController {
 //            guard !self.selectedAssets.isEmpty else { return }
 //            self.saveAsset(self.selectedAssets[0])
         }
-        ac.cancelBlock = {
+        picker.cancelBlock = {
             debugPrint("cancel select")
         }
-        ac.selectImageRequestErrorBlock = { errorAssets, errorIndexs in
+        picker.selectImageRequestErrorBlock = { errorAssets, errorIndexs in
             debugPrint("fetch error assets: \(errorAssets), error indexs: \(errorIndexs)")
         }
         
         if preview {
-            ac.showPreview(animate: true, sender: self)
+            picker.showPreview(animate: true, sender: self)
         } else {
-            ac.showPhotoLibrary(sender: self)
+            picker.showPhotoLibrary(sender: self)
         }
     }
     
@@ -341,6 +353,11 @@ class ViewController: UIViewController {
         }
         
         vc.delegate = self
+        
+        vc.netVideoCoverImageBlock = { url in
+            debugPrint("Customize the cover image for the network video here. Index: \(String(describing: datas.firstIndex(where: { ($0 as? URL) == url })))")
+            return nil
+        }
         
         vc.doneBlock = { datas in
             debugPrint(datas)
@@ -453,9 +470,8 @@ extension ViewController: UICollectionViewDataSource, UICollectionViewDelegateFl
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let ac = ZLPhotoPreviewSheet()
-        
-        ac.selectImageBlock = { [weak self] results, isOriginal in
+        let picker = ZLPhotoPicker()
+        picker.selectImageBlock = { [weak self] results, isOriginal in
             guard let `self` = self else { return }
             self.selectedResults = results
             self.selectedImages = results.map { $0.image }
@@ -468,7 +484,7 @@ extension ViewController: UICollectionViewDataSource, UICollectionViewDelegateFl
             debugPrint("isOriginal: \(isOriginal)")
         }
         
-        ac.previewAssets(sender: self, assets: selectedAssets, index: indexPath.row, isOriginal: isOriginal, showBottomViewAndSelectBtn: true)
+        picker.previewAssets(sender: self, assets: selectedAssets, index: indexPath.row, isOriginal: isOriginal, showBottomViewAndSelectBtn: true)
     }
 }
 
