@@ -34,7 +34,7 @@ class ZLPhotoPreviewController: UIViewController {
     
     static let previewVCScrollNotification = Notification.Name("previewVCScrollNotification")
     
-    let arrDataSources: [ZLPhotoModel]
+    var arrDataSources: [ZLPhotoModel]
     
     var currentIndex: Int
     
@@ -174,6 +174,8 @@ class ZLPhotoPreviewController: UIViewController {
     
     /// 是否在点击确定时候，当未选择任何照片时候，自动选择当前index的照片
     var autoSelectCurrentIfNotSelectAnyone = true
+    
+    var preloadBlock: ((_ loadAll: Bool) -> [ZLPhotoModel])?
     
     /// 界面消失时，通知上个界面刷新
     var backBlock: (() -> Void)?
@@ -709,7 +711,7 @@ class ZLPhotoPreviewController: UIViewController {
             return
         }
         
-        func callBackBeforeDone() {
+        func callbackBeforeDone() {
             if let block = ZLPhotoConfiguration.default().operateBeforeDoneAction {
                 block(self) { [weak nav] in
                     nav?.selectImageBlock?()
@@ -722,7 +724,7 @@ class ZLPhotoPreviewController: UIViewController {
         let currentModel = arrDataSources[currentIndex]
         
         guard autoSelectCurrentIfNotSelectAnyone, nav.arrSelectedModels.isEmpty else {
-            callBackBeforeDone()
+            callbackBeforeDone()
             return
         }
         
@@ -734,17 +736,30 @@ class ZLPhotoPreviewController: UIViewController {
             nav?.arrSelectedModels.append(currentModel)
             ZLPhotoConfiguration.default().didSelectAsset?(currentModel.asset)
             
-            callBackBeforeDone()
+            callbackBeforeDone()
         }
     }
     
-    private func scrollToSelPreviewCell(_ model: ZLPhotoModel) {
-        guard let index = arrDataSources.lastIndex(of: model) else {
+    private func scrollToSelPreviewCell(_ model: ZLPhotoModel, findForward: Bool = true) {
+        let index: Int?
+        if ZLPhotoUIConfiguration.default().sortAscending {
+            index = arrDataSources.lastIndex { $0 == model }
+        } else {
+            index = arrDataSources.firstIndex { $0 == model }
+        }
+        
+        guard let index else {
+            if findForward {
+                preloadPhotos(loadAll: true, force: true)
+                scrollToSelPreviewCell(model, findForward: false)
+            }
+            
             return
         }
-        collectionView.performBatchUpdates({
+        
+        UIView.animate(withDuration: 0) {
             self.collectionView.scrollToItem(at: IndexPath(row: index, section: 0), at: .centeredHorizontally, animated: false)
-        }) { _ in
+        } completion: { _ in
             self.indexBeforOrientationChanged = self.currentIndex
             self.reloadCurrentCell()
         }
@@ -772,15 +787,25 @@ class ZLPhotoPreviewController: UIViewController {
     }
     
     private func showEditImageVC(image: UIImage) {
+        let config = ZLPhotoConfiguration.default()
         let model = arrDataSources[currentIndex]
         let nav = navigationController as? ZLImageNavController
         ZLEditImageViewController.showEditImageVC(parentVC: self, image: image, editModel: model.editImageModel) { [weak self, weak nav] editImage, editImageModel in
             guard let `self` = self else { return }
             model.editImage = editImage
             model.editImageModel = editImageModel
+            
+            // 单选，且不显示选择按钮的情况下，编辑后直接返回结果
+            if config.maxSelectCount == 1,
+               !config.showSelectBtnWhenSingleSelect {
+                self.doneBtnClick()
+                return
+            }
+            
             if nav?.arrSelectedModels.contains(where: { $0 == model }) == false {
                 model.isSelected = true
                 nav?.arrSelectedModels.append(model)
+                config.didSelectAsset?(model.asset)
                 self.resetSubviewStatus()
                 self.selPhotoPreview?.addSelModel(model: model)
             } else {
@@ -802,7 +827,8 @@ class ZLPhotoPreviewController: UIViewController {
                         let m = ZLPhotoModel(asset: asset)
                         nav?.arrSelectedModels.removeAll()
                         nav?.arrSelectedModels.append(m)
-                        nav?.selectImageBlock?()
+                        ZLPhotoConfiguration.default().didSelectAsset?(asset)
+                        self?.doneBtnClick()
                     } else {
                         showAlertView(localLanguageTextValue(.saveVideoError), self)
                     }
@@ -810,7 +836,8 @@ class ZLPhotoPreviewController: UIViewController {
             } else {
                 nav?.arrSelectedModels.removeAll()
                 nav?.arrSelectedModels.append(model)
-                nav?.selectImageBlock?()
+                ZLPhotoConfiguration.default().didSelectAsset?(model.asset)
+                self?.doneBtnClick()
             }
         }
         
@@ -847,9 +874,11 @@ extension ZLPhotoPreviewController {
         if page == currentIndex {
             return
         }
+        
         currentIndex = page
         resetSubviewStatus()
         selPhotoPreview?.changeCurrentModel(to: arrDataSources[currentIndex])
+        preloadPhotos()
     }
     
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
@@ -859,6 +888,33 @@ extension ZLPhotoPreviewController {
             cell.loadGifWhenCellDisplaying()
         } else if let cell = cell as? ZLLivePhotoPreviewCell {
             cell.loadLivePhotoData()
+        }
+    }
+    
+    private func preloadPhotos(loadAll: Bool = false, force: Bool = false) {
+        guard let preloadBlock else { return }
+        
+        if ZLPhotoUIConfiguration.default().sortAscending {
+            if force || currentIndex <= 10 {
+                let models = preloadBlock(loadAll)
+                arrDataSources.insert(contentsOf: models, at: 0)
+                
+                collectionView.performBatchUpdates {
+                    let indexPaths = models.indices.map { IndexPath(item: $0, section: 0) }
+                    collectionView.insertItems(at: indexPaths)
+                }
+            }
+        } else {
+            if force || currentIndex >= arrDataSources.count - 10 {
+                let models = preloadBlock(loadAll)
+                let oldCount = arrDataSources.count
+                arrDataSources.append(contentsOf: models)
+                
+                collectionView.performBatchUpdates {
+                    let indexPaths = models.indices.map { IndexPath(item: oldCount + $0, section: 0) }
+                    collectionView.insertItems(at: indexPaths)
+                }
+            }
         }
     }
 }
@@ -1017,7 +1073,7 @@ class ZLPhotoPreviewSelectedView: UIView, UICollectionViewDataSource, UICollecti
             collectionView.scrollToItem(at: IndexPath(row: index, section: 0), at: .centeredHorizontally, animated: true)
             collectionView.reloadData()
         } else {
-            collectionView.reloadItems(at: collectionView.indexPathsForVisibleItems)
+            collectionView.reloadData()
         }
     }
     
