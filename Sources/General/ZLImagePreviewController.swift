@@ -49,7 +49,7 @@ public class ZLImagePreviewController: UIViewController {
     
     private let datas: [Any]
     
-    private var selectStatus: [Bool]
+    public private(set) var selectStatus: [Bool]
     
     private let urlType: ((URL) -> ZLURLType)?
     
@@ -168,6 +168,7 @@ public class ZLImagePreviewController: UIViewController {
     @objc public var longPressBlock: ((_ vc: ZLImagePreviewController?, _ index: Int) -> Void)?
     
     @objc public var doneBlock: (([Any]) -> Void)?
+    @objc public var didDisappearBlock: (() -> Void)?
     
     @objc public var videoHttpHeader: [String: Any]?
     
@@ -245,6 +246,11 @@ public class ZLImagePreviewController: UIViewController {
         isFirstAppear = false
         
         reloadCurrentCell()
+    }
+    
+    override public func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        didDisappearBlock?()
     }
     
     override public func viewDidLayoutSubviews() {
@@ -628,8 +634,8 @@ extension ZLImagePreviewController: UICollectionViewDataSource, UICollectionView
             } else {
                 let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ZLNetVideoPreviewCell.zl.identifier, for: indexPath) as! ZLNetVideoPreviewCell
                 
-                cell.configureCell(videoUrl: url, httpHeader: videoHttpHeader) { [weak self] in
-                    self?.netVideoCoverImageBlock?(url)
+                cell.configureCell(videoURL: url, httpHeader: videoHttpHeader) { [weak self] in
+                    (image: self?.netVideoCoverImageBlock?(url), size: nil)
                 }
                 
                 baseCell = cell
