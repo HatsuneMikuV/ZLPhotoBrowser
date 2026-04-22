@@ -125,7 +125,9 @@ class ZLThumbnailViewController: UIViewController {
     }()
     
     private lazy var doneBtn: UIButton = {
-        let btn = createBtn(localLanguageTextValue(.done), #selector(doneBtnClick), true)
+        let confirmText = ZLPhotoUIConfiguration.default().confirmText
+        let doneTitle = confirmText.isEmpty ? localLanguageTextValue(.done) : confirmText
+        let btn = createBtn(doneTitle, #selector(doneBtnClick), true)
         btn.layer.masksToBounds = true
         btn.layer.cornerRadius = ZLLayout.bottomToolBtnCornerRadius
         return btn
@@ -1038,7 +1040,8 @@ class ZLThumbnailViewController: UIViewController {
             zlLoggerInDebug("Navigation controller is null")
             return
         }
-        var doneTitle = localLanguageTextValue(.done)
+        let confirmText = ZLPhotoUIConfiguration.default().confirmText
+        var doneTitle = confirmText.isEmpty ? localLanguageTextValue(.done) : confirmText
         if ZLPhotoConfiguration.default().showSelectCountOnDoneBtn,
            !nav.arrSelectedModels.isEmpty {
             doneTitle += "(" + String(nav.arrSelectedModels.count) + ")"

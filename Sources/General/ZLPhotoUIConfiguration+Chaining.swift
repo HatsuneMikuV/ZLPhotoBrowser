@@ -40,6 +40,12 @@ public extension ZLPhotoUIConfiguration {
         topTips = tips
         return self
     }
+  
+    @discardableResult
+    func confirmText(_ confirm: String) -> ZLPhotoUIConfiguration {
+        confirmText = confirm
+        return self
+    }
     
     @discardableResult
     func style(_ style: ZLPhotoBrowserStyle) -> ZLPhotoUIConfiguration {

@@ -158,6 +158,8 @@ public class ZLPhotoUIConfiguration: NSObject {
     
     public var topTips: String = ""
 
+    public var confirmText: String = ""
+
     // MARK: Navigation and bottom tool bar
     
     /// The blur effect of the navigation bar in the album list

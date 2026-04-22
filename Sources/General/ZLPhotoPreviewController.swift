@@ -156,7 +156,9 @@ class ZLPhotoPreviewController: UIViewController {
     }()
     
     private lazy var doneBtn: UIButton = {
-        let btn = createBtn(localLanguageTextValue(.done), #selector(doneBtnClick), true)
+        let confirmText = ZLPhotoUIConfiguration.default().confirmText
+        let doneTitle = confirmText.isEmpty ? localLanguageTextValue(.done) : confirmText
+        let btn = createBtn(doneTitle, #selector(doneBtnClick), true)
         btn.backgroundColor = .zl.bottomToolViewBtnNormalBgColorOfPreviewVC
         btn.layer.masksToBounds = true
         btn.layer.cornerRadius = ZLLayout.bottomToolBtnCornerRadius
@@ -518,7 +520,8 @@ class ZLPhotoPreviewController: UIViewController {
             return
         }
         let selCount = nav.arrSelectedModels.count
-        var doneTitle = localLanguageTextValue(.done)
+        let confirmText = ZLPhotoUIConfiguration.default().confirmText
+        var doneTitle = confirmText.isEmpty ? localLanguageTextValue(.done) : confirmText
         if ZLPhotoConfiguration.default().showSelectCountOnDoneBtn, selCount > 0 {
             doneTitle += "(" + String(selCount) + ")"
         }
